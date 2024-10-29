@@ -3,6 +3,8 @@ package handler
 import (
 	"event/models"
 	"event/usecase"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,7 +33,9 @@ func (a AuthHandler) Login(c *gin.Context)  {
 	}
 
 	u,err := a.AuthUsecase.Login(user.Email,user.Password)
-	c.SetCookie("jwt",u.AccessToken,3600,"/","localhost",false,true)
+	idString := strconv.Itoa(u.Id)
+	c.SetCookie("user_id",idString,3600,"","",false,true)
+	
 	
 	res := &UserRes{
 		FullName: u.FullName,

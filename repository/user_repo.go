@@ -15,18 +15,63 @@ import (
 type UserRepository interface {
 	GetAllEvents() ([]models.EventRes, error)
 	GetEventById(*string) (*models.EventRes, error)
-	BookTicker(eventId *string, userId *int) error
+	BookTicket(eventId *string, userId *int, tickerNo *int) error
+	AvailableTicket(eventId *string) (int, error)
 }
 
 type userRepository struct {
-	db *sql.DB
+	db    *sql.DB
 	cache *redis.Client
 }
 
-// BookTicker implements UserRepository.
-func (u *userRepository) BookTicker(eventId *string, userId *int) error {
-	panic("unimplemented")
+// AvailableTicket implements UserRepository.
+func (u *userRepository) AvailableTicket(eventId *string) (int, error) {
+	c, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	query := "SELECT remaining_quota FROM event_quotas WHERE event_id = $1"
+	var quota int
+	err := u.db.QueryRowContext(c, query, eventId).Scan(&quota)
+	if err != nil {
+		return 0, err
+	}
+	return quota, nil
 }
+
+// BookTicker implements UserRepository.
+func (u *userRepository) BookTicket(eventId *string, userId *int, ticketNo *int) error {
+    c, cancel := context.WithCancel(context.Background())
+    defer cancel()
+
+    // Start a transaction
+    // tx, err := u.db.BeginTx(c, nil)
+    // if err != nil {
+    //     return errors.New("failed to begin transaction")
+    // }
+
+    // Prepare the queries
+    insertQuery := "INSERT INTO bookings(event_id, user_id, number_of_tickets) VALUES($1, $2, $3)"
+    updateQuery := "UPDATE event_quotas SET remaining_quota = remaining_quota - $1 WHERE event_id = $2"
+
+    // Execute the insert query
+    _, err := u.db.ExecContext(c, insertQuery, eventId, userId, ticketNo)
+    if err != nil {
+         // Rollback transaction on error
+        return errors.New("failed to book ticket")
+    }
+
+    // Execute the update query
+    _, err = u.db.ExecContext(c, updateQuery, ticketNo, eventId)
+    if err != nil {
+       // Rollback transaction on error
+        return errors.New("failed to update remaining quota")
+    }
+
+    // Commit the transaction
+   
+
+    return nil
+}
+
 
 // GetAllEvents implements UserRepository.
 func (u *userRepository) GetAllEvents() ([]models.EventRes, error) {
@@ -44,7 +89,7 @@ func (u *userRepository) GetAllEvents() ([]models.EventRes, error) {
 			return nil, err
 		}
 		defer rows.Close()
-	
+
 		for rows.Next() {
 			var event models.EventRes
 			if err := rows.Scan(&event.Id, &event.Title, &event.Description, &event.Location,
@@ -54,26 +99,26 @@ func (u *userRepository) GetAllEvents() ([]models.EventRes, error) {
 			}
 			events = append(events, event)
 		}
-	
+
 		if err := rows.Err(); err != nil {
 			return nil, err
 		}
 
 		eventJSON, err := json.Marshal(events)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 
-		err = u.cache.Set(c, query,eventJSON, time.Minute*15).Err()
+		err = u.cache.Set(c, query, eventJSON, time.Minute*15).Err()
 		if err != nil {
 			return nil, err
 		}
 		return events, nil
-	}else if err != nil {
+	} else if err != nil {
 		return nil, err
-	}else{
+	} else {
 		fmt.Println("from cache")
-		var events [] models.EventRes
+		var events []models.EventRes
 		err = json.Unmarshal([]byte(value), &events)
 		if err != nil {
 			return nil, err
@@ -110,13 +155,13 @@ func (u *userRepository) GetEventById(eventId *string) (*models.EventRes, error)
 		return nil, err
 	}
 
-	return &event, nil 
+	return &event, nil
 
 }
 
-func NewUserRepo(db *sql.DB,cache *redis.Client) UserRepository {
+func NewUserRepo(db *sql.DB, cache *redis.Client) UserRepository {
 	return &userRepository{
-		db: db,
+		db:    db,
 		cache: cache,
 	}
 }

@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"event/models"
 	"event/repository"
 )
@@ -8,7 +9,7 @@ import (
 type UserUsecase interface {
 	GetAllEvents() (*[]models.EventRes, error)
 	GetEventById(eventId *string) (*models.EventRes, error)
-	BookTicket()
+	BookTicket(eventId *string,userId *int,tickerNo *int) (error)
 }
 
 type userUsecase struct {
@@ -16,8 +17,24 @@ type userUsecase struct {
 }
 
 // BookTicket implements UserUsecase.
-func (u *userUsecase) BookTicket() {
-	panic("unimplemented")
+func (u *userUsecase) BookTicket(eventId *string,userId *int,tickerNo *int) error{
+	// check eventId
+	_,err :=u.userRepo.GetEventById(eventId)
+	if err != nil{
+		return err
+	}
+
+	//check available tickers
+	available,err := u.userRepo.AvailableTicket(eventId)
+	if available < *tickerNo{
+		return errors.New("no enough ticket")
+	}
+	err  = u.userRepo.BookTicket(eventId,userId,tickerNo)
+	if err != nil{
+		return err
+	}
+	return nil
+	//book ticket
 }
 
 // GetAllEvents implements UserUsecase.

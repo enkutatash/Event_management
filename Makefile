@@ -7,10 +7,13 @@ createdb:
 dropdb:
 	docker exec -it postgres dropdb goc
 createtable:
-	migrate create -ext sql -dir db/migrate -seq events_table
+	migrate create -ext sql -dir db/migrate -seq event_quota_table
 migrateup:
 	migrate -path db/migrate -database "postgresql://postgres:enku0811@localhost:5433/users?sslmode=disable" -verbose up
 migratedown:
-	migrate -path db/migrate -database "postgresql://postgres:enku0811@localhost:5433/gochat?sslmode=disable" -verbose down
+	migrate -path db/migrate -database "postgresql://postgres:enku0811@localhost:5433/users?sslmode=disable" -verbose down
+# when there is dirty migration, use force to and migrateup
+remove:
+	migrate -path db/migrate -database "postgresql://postgres:enku0811@localhost:5433/users?sslmode=disable" force versionnumber
 
-.PHONEY: postgresinit postgres createdb dropdb migrateup migratedown
+.PHONEY: postgresinit postgres createdb dropdb migrateup migratedown remove createtable

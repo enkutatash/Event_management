@@ -14,6 +14,7 @@ func InitRoute(r *gin.Engine,userhandler handler.AuthRequest,handler handler.Use
 	r.GET("/logout",userhandler.Logout)
 	r.GET("/events",handler.GetAllEvents)
 	r.GET("/event/:event_id",handler.GetEventById)
+	r.GET("/book",handler.BookTicket)
 }
 
 func InitAdminRoute(r *gin.Engine,adminHandler handler.AdminHandler){

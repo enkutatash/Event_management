@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"event/models"
-	"fmt"
 )
 
 type AdminRepository interface {
@@ -43,10 +42,13 @@ func (a *adminRepo) CreateEvent(event *models.Event) (*string, error) {
 	defer cancel()
 	query := "INSERT INTO events(title, description, location, start_date, end_date, start_time, end_time, price, quota, organizer) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id"
 	var eventId string
-	fmt.Println("id",event.Id)
+	query2 := "INSERT INTO event_quotas(event_id, remaining_quota) VALUES($1, $2)"
 	err := a.db.QueryRowContext(c, query, event.Title, event.Description, event.Location, event.StartDate, event.EndDate, event.StartTime, event.EndTime, event.Price, event.Quota, event.Organizer).Scan(&eventId)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
+	}
+	_, err = a.db.ExecContext(c, query2, eventId, event.Quota)
+	if err != nil {
 		return nil, err
 	}
 	return &eventId, nil

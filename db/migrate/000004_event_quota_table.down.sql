@@ -1,0 +1,1 @@
+DROP TABLE event_quota IF EXISTS;
