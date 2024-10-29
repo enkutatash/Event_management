@@ -18,14 +18,14 @@ func main() {
 	}
 	
 		log.Println("DB connected")
-
+	
 	r := gin.New()
 	r.Use(gin.Logger())
 	authRepo := repository.NewAuthRepo(dbConn.Db)
 	authUsecase := usecase.NewAuthUseCase(authRepo)
 	authhandler := handler.NewHandler(authUsecase)
 	
-	userRepo := repository.NewUserRepo(dbConn.Db)
+	userRepo := repository.NewUserRepo(dbConn.Db,dbConn.Cache)
 	userUsecase := usecase.NewuserUsecase(userRepo)
 	userHandler := handler.NewUserHandler(userUsecase)
 
@@ -38,4 +38,5 @@ func main() {
 	adminHandler := handler.NewAdminHandler(adminUsecase)
 	route.InitAdminRoute(r,adminHandler)
 	route.Run(r,":8080")
+
 }
