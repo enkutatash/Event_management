@@ -7,11 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitRoute(r *gin.Engine,userhandler handler.AuthRequest){
+func InitRoute(r *gin.Engine,userhandler handler.AuthRequest,handler handler.UserHandler){
 	
 	r.POST("/signup",userhandler.Signup)
 	r.POST("/login",userhandler.Login)
 	r.GET("/logout",userhandler.Logout)
+	r.GET("/events",handler.GetAllEvents)
+	r.GET("/event/:event_id",handler.GetEventById)
 }
 
 func InitAdminRoute(r *gin.Engine,adminHandler handler.AdminHandler){

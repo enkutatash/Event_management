@@ -83,7 +83,7 @@ func (a *authUseCase) Signup(fullname string, email string, password string) (*i
 	// call repository
 }
 
-func NewUseCase(authRepo repository.AuthRepository) AuthUsecase {
+func NewAuthUseCase(authRepo repository.AuthRepository) AuthUsecase {
 	return &authUseCase{
 		AuthRepo: authRepo,
 	}

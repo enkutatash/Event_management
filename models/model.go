@@ -35,3 +35,16 @@ type Event struct {
 	Quota       int `json:"quota"`
 	Organizer   string `json:"organizer"`
 }
+
+type EventRes struct{
+	Id          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Location    string `json:"location"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	StartTime   time.Time `json:"start_time"`
+	EndTime     time.Time `json:"end_time"`
+	Price       float64	`json:"price"`
+	Organizer   string `json:"organizer"`
+}

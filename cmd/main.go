@@ -21,10 +21,16 @@ func main() {
 
 	r := gin.New()
 	r.Use(gin.Logger())
-	userRepo := repository.NewAuthRepo(dbConn.Db)
-	userUsecase := usecase.NewUseCase(userRepo)
-	userhandler := handler.NewHandler(userUsecase)
-	route.InitRoute(r,userhandler)
+	authRepo := repository.NewAuthRepo(dbConn.Db)
+	authUsecase := usecase.NewAuthUseCase(authRepo)
+	authhandler := handler.NewHandler(authUsecase)
+	
+	userRepo := repository.NewUserRepo(dbConn.Db)
+	userUsecase := usecase.NewuserUsecase(userRepo)
+	userHandler := handler.NewUserHandler(userUsecase)
+
+
+	route.InitRoute(r,authhandler,userHandler)
 
 
 	adminRepo := repository.NewAdminRepo(dbConn.Db)
