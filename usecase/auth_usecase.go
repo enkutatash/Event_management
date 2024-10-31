@@ -75,6 +75,12 @@ func (a *authUseCase) Signup(fullname string, email string, password string) (*i
 		Password: hashedPassword,
 	}
 
+	emailsend := util.VerifyEmail(email)
+
+	if emailsend != false{
+		return nil,errors.New("failed to send email please check the email")
+	}
+
 	id,err := a.AuthRepo.CreateUser(user)
 	if err != nil{
 		return nil,err

@@ -37,6 +37,6 @@ func main() {
 	adminUsecase := usecase.AdminUsecase(adminRepo)
 	adminHandler := handler.NewAdminHandler(adminUsecase)
 	route.InitAdminRoute(r,adminHandler)
-	route.Run(r,":8080")
+	route.Run(r,":8081")
 
 }

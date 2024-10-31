@@ -30,7 +30,7 @@ func (a *authRepo) CreateUser(user *models.UserReq) (*int,error) {
 	c,cancel := context.WithCancel(context.Background())
 	defer cancel()
 	var userId int
-	query := "INSERT INTO users(fullname,email,password) VALUES($1,$2,$3)  RETURNING id"
+	query := "INSERT INTO users(fullname,email,password,verified) VALUES($1,$2,$3)  RETURNING id"
 	// _, err := a.db.ExecContext(c, query, user.FullName, user.Email, user.Password)
 	err :=a.db.QueryRowContext(c,query,user.FullName,user.Email,user.Password).Scan(&userId)
 	// err := a.db.QueryRowContext(c,query,user.FullName,user.Email,user.Password)

@@ -8,22 +8,32 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+
 type UserHandler interface {
 	GetAllEvents(c *gin.Context)
 	GetEventById(c *gin.Context)
 	BookTicket(c *gin.Context)
+	VerifyEmail(c *gin.Context)
+	
 }
 
 type userHandler struct {
 	UserUsecase usecase.UserUsecase
 }
 
+// VerifyEmail implements UserHandler.
+func (u *userHandler) VerifyEmail(c *gin.Context) {
+	email := c.Query("email")
+	fmt.Println("email varified", email)
+	c.IndentedJSON(200, gin.H{"message": email + " verified" })
+}
+
 // BookTicket implements UserHandler.
 func (u *userHandler) BookTicket(c *gin.Context) {
 	event_id := c.Query("event_id")
 	ticket_no := c.Query("ticket_no")
-	user_id,err := c.Cookie("user_id")
-	fmt.Println("cookie",user_id)
+	user_id, err := c.Cookie("user_id")
+	fmt.Println("cookie", user_id)
 	if err != nil {
 		c.IndentedJSON(400, gin.H{"error": "user not logged in"})
 		return
@@ -31,27 +41,28 @@ func (u *userHandler) BookTicket(c *gin.Context) {
 
 	ticketNoInt, err := strconv.Atoi(ticket_no)
 	if err != nil {
-        c.IndentedJSON(400, gin.H{"error": "invalid ticket number"})
-        return
-    }
+		c.IndentedJSON(400, gin.H{"error": "invalid ticket number"})
+		return
+	}
 	userIDInt, err := strconv.Atoi(user_id)
-    if err != nil {
-        c.IndentedJSON(400, gin.H{"error": "invalid user ID"})
-        return
-    }
+	if err != nil {
+		c.IndentedJSON(400, gin.H{"error": "invalid user ID"})
+		return
+	}
 	err = u.UserUsecase.BookTicket(&event_id, &userIDInt, &ticketNoInt)
 	if err != nil {
 		c.IndentedJSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	c.IndentedJSON(200, gin.H{"message": "ticket booked"})
-	
+
 }
 
 type Pagination struct {
 	Offset int `form:"offset"`
-	Limit  int `form:"limit"` 
+	Limit  int `form:"limit"`
 }
+
 // GetAllEvents implements UserHandler.
 func (u *userHandler) GetAllEvents(c *gin.Context) {
 	var p Pagination

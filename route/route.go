@@ -8,7 +8,8 @@ import (
 )
 
 func InitRoute(r *gin.Engine,userhandler handler.AuthRequest,handler handler.UserHandler){
-	
+	// r.POST("/validate",handler.Validate)
+	r.GET("/verify",handler.VerifyEmail)
 	r.POST("/signup",userhandler.Signup)
 	r.POST("/login",userhandler.Login)
 	r.GET("/logout",userhandler.Logout)

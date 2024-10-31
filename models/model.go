@@ -20,6 +20,7 @@ type UserRes struct {
 	FullName string
 	Email    string
 	Password string
+	// Active bool
 }
 
 type Event struct {
