@@ -5,7 +5,6 @@ import (
 	"event/models"
 	"event/repository"
 	"event/util"
-	
 )
 
 const (
@@ -13,37 +12,53 @@ const (
 )
 
 type AuthUsecase interface {
-	Signup(fullname string, email string, password string) (*int,error)
+	Signup(fullname string, email string, password string) (*int, error)
 	Login(email string, password string) (*models.LoginRes, error)
+	VerifyEmail(email *string, token *string) error
 }
 
 type authUseCase struct {
 	AuthRepo repository.AuthRepository
 }
 
-// Login implements AuthUsecase.
-func (a *authUseCase) Login(email string, password string) (*models.LoginRes, error) {
-	user,err := a.AuthRepo.GetUserByEmail(email)
-	if err != nil{
-		return nil,err
+// VerifyEmail implements AuthUsecase.
+func (a *authUseCase) VerifyEmail(email *string, token *string) error {
+
+	err := a.AuthRepo.ActivateUser(*email)
+	if err != nil {
+		return err
 	}
 
-	err = util.CheckPassword(user.Password,password)
-	if err != nil{
-		return nil,errors.New("password is incorrect")
+	return nil
+}
+
+// Login implements AuthUsecase.
+func (a *authUseCase) Login(email string, password string) (*models.LoginRes, error) {
+	user, err := a.AuthRepo.GetUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	err = util.CheckPassword(user.Password, password)
+	if err != nil {
+		return nil, errors.New("password is incorrect")
+	}
+
+	if !user.Active {
+		return nil, errors.New("please verify your email")
 	}
 
 	var role string
-	if user.Email == "admin@com"{
+	if user.Email == "admin@com" {
 		role = "admin"
-	}else{
+	} else {
 		role = "user"
 	}
-	
-	res , err := util.GenerateToken(user.Id,user.FullName,user.Email,role)
 
-	if err != nil{
-		return nil,err
+	res, err := util.GenerateToken(user.Id, user.FullName, user.Email, role)
+
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil
@@ -51,41 +66,44 @@ func (a *authUseCase) Login(email string, password string) (*models.LoginRes, er
 }
 
 // Signup implements AuthUsecase.
-func (a *authUseCase) Signup(fullname string, email string, password string) (*int,error) {
+func (a *authUseCase) Signup(fullname string, email string, password string) (*int, error) {
 
-	// check if email already exist 
-	us,err := a.AuthRepo.GetUserByEmail(email)
+	// check if email already exist
+	us, err := a.AuthRepo.GetUserByEmail(email)
 
-	if err != nil{
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
-	if us != nil{
-		return nil,errors.New("email already exist")
+	if us != nil {
+		return nil, errors.New("email already exist")
 	}
-	
+
 	// hash password
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
-		return nil,errors.New("failed to hash password")
+		return nil, errors.New("failed to hash password")
 	}
-	
+
 	user := &models.UserReq{
 		FullName: fullname,
 		Email:    email,
 		Password: hashedPassword,
 	}
+	id, err := a.AuthRepo.CreateUser(user)
+	if err != nil {
+		return nil, err
+	}
+	res, err := util.GenerateToken(*id, user.FullName, user.Email, "user")
+	if err != nil {
+		return nil, err
+	}
+	emailsend := util.VerifyEmail(email, res.AccessToken)
 
-	emailsend := util.VerifyEmail(email)
-
-	if emailsend != false{
-		return nil,errors.New("failed to send email please check the email")
+	if !emailsend {
+		return nil, errors.New("failed to send email please check the email")
 	}
 
-	id,err := a.AuthRepo.CreateUser(user)
-	if err != nil{
-		return nil,err
-	}
-	return id,nil
+	return id, nil
 	// call repository
 }
 

@@ -13,7 +13,7 @@ type UserHandler interface {
 	GetAllEvents(c *gin.Context)
 	GetEventById(c *gin.Context)
 	BookTicket(c *gin.Context)
-	VerifyEmail(c *gin.Context)
+	
 	
 }
 
@@ -21,12 +21,7 @@ type userHandler struct {
 	UserUsecase usecase.UserUsecase
 }
 
-// VerifyEmail implements UserHandler.
-func (u *userHandler) VerifyEmail(c *gin.Context) {
-	email := c.Query("email")
-	fmt.Println("email varified", email)
-	c.IndentedJSON(200, gin.H{"message": email + " verified" })
-}
+
 
 // BookTicket implements UserHandler.
 func (u *userHandler) BookTicket(c *gin.Context) {

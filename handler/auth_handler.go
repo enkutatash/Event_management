@@ -16,12 +16,26 @@ type UserRes struct{
 type AuthRequest interface {
 	Login(c *gin.Context) 
 	Signup(c *gin.Context) 
-	Logout(c *gin.Context) 
+	Logout(c *gin.Context)
+	VerifyEmail(c *gin.Context) 
 }
 
 
 type AuthHandler struct {
 	AuthUsecase usecase.AuthUsecase
+}
+
+// VerifyEmail implements UserHandler.
+func (u AuthHandler) VerifyEmail(c *gin.Context) {
+	email := c.Query("email")
+	token := c.Query("token")
+	
+	err := u.AuthUsecase.VerifyEmail(&email, &token)
+	if err != nil {
+		c.IndentedJSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	c.IndentedJSON(200, gin.H{"message": email + " verified" })
 }
 
 // Login implements AuthRequest.
