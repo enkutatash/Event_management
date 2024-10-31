@@ -48,9 +48,24 @@ func (u *userHandler) BookTicket(c *gin.Context) {
 	
 }
 
+type Pagination struct {
+	Offset int `form:"offset"`
+	Limit  int `form:"limit"` 
+}
 // GetAllEvents implements UserHandler.
 func (u *userHandler) GetAllEvents(c *gin.Context) {
-	events, err := u.UserUsecase.GetAllEvents()
+	var p Pagination
+	if err := c.ShouldBindQuery(&p); err != nil {
+		c.IndentedJSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	if p.Limit == 0 {
+		p.Limit = 10
+	}
+	if p.Offset == 0 {
+		p.Offset = 1
+	}
+	events, err := u.UserUsecase.GetAllEvents(p.Offset, p.Limit)
 	if err != nil {
 		c.IndentedJSON(400, gin.H{"error": err.Error()})
 		return

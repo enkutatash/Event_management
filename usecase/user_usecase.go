@@ -7,7 +7,7 @@ import (
 )
 
 type UserUsecase interface {
-	GetAllEvents() (*[]models.EventRes, error)
+	GetAllEvents(offset int,limit int) (*[]models.EventRes, error)
 	GetEventById(eventId *string) (*models.EventRes, error)
 	BookTicket(eventId *string,userId *int,tickerNo *int) (error)
 }
@@ -38,8 +38,8 @@ func (u *userUsecase) BookTicket(eventId *string,userId *int,tickerNo *int) erro
 }
 
 // GetAllEvents implements UserUsecase.
-func (u *userUsecase) GetAllEvents() (*[]models.EventRes, error) {
-	events, err := u.userRepo.GetAllEvents()
+func (u *userUsecase) GetAllEvents(offset int,limit int) (*[]models.EventRes, error) {
+	events, err := u.userRepo.GetAllEvents(offset,limit)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 type UserRepository interface {
-	GetAllEvents() ([]models.EventRes, error)
+	GetAllEvents(offset int,limit int) ([]models.EventRes, error)
 	GetEventById(*string) (*models.EventRes, error)
 	BookTicket(eventId *string, userId *int, tickerNo *int) error
 	AvailableTicket(eventId *string) (int, error)
@@ -74,17 +74,18 @@ func (u *userRepository) BookTicket(eventId *string, userId *int, ticketNo *int)
 
 
 // GetAllEvents implements UserRepository.
-func (u *userRepository) GetAllEvents() ([]models.EventRes, error) {
+func (u *userRepository) GetAllEvents(offset int, limit int) ([]models.EventRes, error) {
 	c, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	var events []models.EventRes
-	query := "SELECT id, title, description, location, start_date, end_date, start_time, end_time, price, organizer FROM events"
-	value, err := u.cache.Get(c, query).Result()
+	cacheKey := fmt.Sprintf("events:limit:%d:offset:%d", limit, offset)
+	query := "SELECT id, title, description, location, start_date, end_date, start_time, end_time, price, organizer FROM events LIMIT $1 OFFSET $2"
+	value, err := u.cache.Get(c, cacheKey).Result()
 
 	if err == redis.Nil {
 		fmt.Println("from db")
-		rows, err := u.db.QueryContext(c, query)
+		rows, err := u.db.QueryContext(c, query, limit, offset)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +110,7 @@ func (u *userRepository) GetAllEvents() ([]models.EventRes, error) {
 			return nil, err
 		}
 
-		err = u.cache.Set(c, query, eventJSON, time.Minute*15).Err()
+		err = u.cache.Set(c, cacheKey, eventJSON, time.Minute*15).Err()
 		if err != nil {
 			return nil, err
 		}
